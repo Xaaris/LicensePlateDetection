@@ -22,9 +22,9 @@ if __name__ == "__main__":
     frame_counter = 0
     car_counter = 0
     for frame in clip.iter_frames():
+        frame_counter += 1
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         car_boxes = detect_vehicle(frame)
-        frame_counter += 1
         print("Found " + str(len(car_boxes)) + " cars in frame " + str(frame_counter))
         for car_box in car_boxes:
             frame = cv2.rectangle(frame, car_box[0], car_box[3], (0, 0, 255), 3)

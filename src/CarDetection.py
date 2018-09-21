@@ -4,12 +4,9 @@ import tensorflow as tf
 
 
 class CarDetection:
-    w_img = 1280
-    h_img = 720
-
     weights_file = '../weights/YOLO_small.ckpt'
     alpha = 0.1
-    threshold = 0.3
+    confidence_threshold = 0.3
     iou_threshold = 0.5
 
     result_list = None
@@ -18,12 +15,8 @@ class CarDetection:
                "sheep", "sofa", "train", "tvmonitor"]
 
     def __init__(self):
-        self.build_networks()
-
-    def build_networks(self):
         print("Building YOLO_small graph...")
         self.x = tf.placeholder('float32', [None, 448, 448, 3])
-        # self.x = tf.placeholder('float32',[None,252, 1280, 3])
         self.conv_1 = self.conv_layer(1, self.x, 64, 7, 2)
         self.pool_2 = self.pooling_layer(2, self.conv_1, 2, 2)
         self.conv_3 = self.conv_layer(3, self.pool_2, 192, 3, 1)
@@ -56,6 +49,7 @@ class CarDetection:
         self.fc_30 = self.fc_layer(30, self.fc_29, 4096, flat=False, linear=False)
         # skip dropout_31
         self.fc_32 = self.fc_layer(32, self.fc_30, 1470, flat=False, linear=True)
+
         self.sess = tf.Session()
         self.sess.run(tf.global_variables_initializer())
         self.saver = tf.train.Saver()
@@ -96,28 +90,25 @@ class CarDetection:
         biases = tf.Variable(tf.constant(0.1, shape=[hiddens]))
         print('Layer  %d : Type = Full, Hidden = %d, Input dimension = %d, Flat = %d, Activation = %d' % (
             idx, hiddens, int(dim), int(flat), 1 - int(linear)))
-        if linear: return tf.add(tf.matmul(inputs_processed, weight), biases, name=str(idx) + '_fc')
+        if linear:
+            return tf.add(tf.matmul(inputs_processed, weight), biases, name=str(idx) + '_fc')
         ip = tf.add(tf.matmul(inputs_processed, weight), biases)
         return tf.maximum(self.alpha * ip, ip, name=str(idx) + '_fc')
 
 
-def detect_from_cvmat(yolo, img):
-    yolo.h_img, yolo.w_img, _ = img.shape
+def detect_from_file(yolo, img):
+    h_img, w_img, _ = img.shape
     img_resized = cv2.resize(img, (448, 448))
     img_resized_np = np.asarray(img_resized)
     inputs = np.zeros((1, 448, 448, 3), dtype='float32')
     inputs[0] = (img_resized_np / 255.0) * 2.0 - 1.0
     in_dict = {yolo.x: inputs}
     net_output = yolo.sess.run(yolo.fc_32, feed_dict=in_dict)
-    result = interpret_output(yolo, net_output[0])
+    result = interpret_output(yolo, net_output[0], h_img, w_img)
     yolo.result_list = result
 
 
-def detect_from_file(yolo, filename):
-    detect_from_cvmat(yolo, filename)
-
-
-def interpret_output(yolo, output):
+def interpret_output(yolo, output, h_img, w_img):
     probs = np.zeros((7, 7, 2, 20))
     class_probs = np.reshape(output[0:980], (7, 7, 20))
     scales = np.reshape(output[980:1078], (7, 7, 2))
@@ -130,22 +121,23 @@ def interpret_output(yolo, output):
     boxes[:, :, :, 2] = np.multiply(boxes[:, :, :, 2], boxes[:, :, :, 2])
     boxes[:, :, :, 3] = np.multiply(boxes[:, :, :, 3], boxes[:, :, :, 3])
 
-    boxes[:, :, :, 0] *= yolo.w_img
-    boxes[:, :, :, 1] *= yolo.h_img
-    boxes[:, :, :, 2] *= yolo.w_img
-    boxes[:, :, :, 3] *= yolo.h_img
+    boxes[:, :, :, 0] *= w_img
+    boxes[:, :, :, 1] *= h_img
+    boxes[:, :, :, 2] *= w_img
+    boxes[:, :, :, 3] *= h_img
 
     for i in range(2):
         for j in range(20):
             probs[:, :, i, j] = np.multiply(class_probs[:, :, j], scales[:, :, i])
 
-    filter_mat_probs = np.array(probs >= yolo.threshold, dtype='bool')
+    filter_mat_probs = np.array(probs >= yolo.confidence_threshold, dtype='bool')
     filter_mat_boxes = np.nonzero(filter_mat_probs)
     boxes_filtered = boxes[filter_mat_boxes[0], filter_mat_boxes[1], filter_mat_boxes[2]]
     probs_filtered = probs[filter_mat_probs]
     classes_num_filtered = np.argmax(filter_mat_probs, axis=3)[
         filter_mat_boxes[0], filter_mat_boxes[1], filter_mat_boxes[2]]
 
+    # order by decreasing probability
     argsort = np.array(np.argsort(probs_filtered))[::-1]
     boxes_filtered = boxes_filtered[argsort]
     probs_filtered = probs_filtered[argsort]
@@ -155,7 +147,7 @@ def interpret_output(yolo, output):
         if probs_filtered[i] == 0:
             continue
         for j in range(i + 1, len(boxes_filtered)):
-            if iou(boxes_filtered[i], boxes_filtered[j]) > yolo.iou_threshold:
+            if intersection_over_union(boxes_filtered[i], boxes_filtered[j]) > yolo.iou_threshold:
                 probs_filtered[j] = 0.0
 
     filter_iou = np.array(probs_filtered > 0.0, dtype='bool')
@@ -172,6 +164,21 @@ def interpret_output(yolo, output):
     return result
 
 
+def intersection_over_union(box1, box2):
+    rightmost_left_edge = max(box1[0] - 0.5 * box1[2], box2[0] - 0.5 * box2[2])
+    topmost_bottom_edge = max(box1[1] - 0.5 * box1[3], box2[1] - 0.5 * box2[3])
+    leftmost_right_edge = min(box1[0] + 0.5 * box1[2], box2[0] + 0.5 * box2[2])
+    bottommost_top_edge = min(box1[1] + 0.5 * box1[3], box2[1] + 0.5 * box2[3])
+
+    intersection_area = max(0, leftmost_right_edge - rightmost_left_edge + 1) * max(0, bottommost_top_edge - topmost_bottom_edge + 1)
+
+    box1_area = box1[2] * box1[3]
+    box2_area = box2[2] * box2[3]
+
+    iou = intersection_area / float(box1_area + box2_area - intersection_area)
+    return iou
+
+
 def extract_results(yolo_results):
     result_contours = []
     for i in range(len(yolo_results)):
@@ -186,16 +193,6 @@ def extract_results(yolo_results):
             bottom_right = (x + w // 2, y + h // 2)
             result_contours.append([upper_left, upper_right, bottom_left, bottom_right])
     return result_contours
-
-
-def iou(box1, box2):
-    tb = min(box1[0] + 0.5 * box1[2], box2[0] + 0.5 * box2[2]) - max(box1[0] - 0.5 * box1[2], box2[0] - 0.5 * box2[2])
-    lr = min(box1[1] + 0.5 * box1[3], box2[1] + 0.5 * box2[3]) - max(box1[1] - 0.5 * box1[3], box2[1] - 0.5 * box2[3])
-    if tb < 0 or lr < 0:
-        intersection = 0
-    else:
-        intersection = tb * lr
-    return intersection / (box1[2] * box1[3] + box2[2] * box2[3] - intersection)
 
 
 yolo = CarDetection()
