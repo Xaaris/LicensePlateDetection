@@ -3,13 +3,7 @@ import math
 import cv2
 import numpy as np
 
-
-def save_debug_image_with_description(image, desc):
-    cv2.imwrite("debugImages/" + desc + ".png", image)
-
-
-def deg_to_rad(angle):
-    return angle * np.pi / 180.0
+from Utils import show_image
 
 
 def rad_to_deg(angle):
@@ -60,41 +54,41 @@ class LicensePlateDetection:
                         return True
         return False
 
-    def process_image(self):
+    def process_image(self, debug_mode):
         result_plates = []
-        input_image_copy = np.copy(self.input_image)
+        working_image = np.copy(self.input_image)
 
-        save_debug_image_with_description(self.input_image, "01 - input_image")
-        gray_scale_image = cv2.cvtColor(self.input_image, cv2.COLOR_BGR2GRAY)
-        save_debug_image_with_description(gray_scale_image, "02 - after cvtColor")
-        high_contrast_image = enhance(gray_scale_image)
-        save_debug_image_with_description(high_contrast_image, "03 - after enhance")
-        blurred_image = cv2.GaussianBlur(high_contrast_image, (5, 5), 0)
-        save_debug_image_with_description(blurred_image, "04 - after gaussian blur")
-        sobel_edges_detected_image = cv2.Sobel(blurred_image, -1, 1, 0)
-        save_debug_image_with_description(sobel_edges_detected_image, "05 - after sobel")
-        _, threshholded_image = cv2.threshold(sobel_edges_detected_image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        save_debug_image_with_description(threshholded_image, "06 - after threshold")
+        if debug_mode: show_image(working_image, "input_image")
+        working_image = cv2.cvtColor(working_image, cv2.COLOR_BGR2GRAY)
+        if debug_mode: show_image(working_image, "after cvtColor")
+        working_image = enhance(working_image)
+        if debug_mode: show_image(working_image, "after enhance")
+        working_image = cv2.GaussianBlur(working_image, (5, 5), 0)
+        if debug_mode: show_image(working_image, "after after gaussian blur")
+        working_image = cv2.Sobel(working_image, -1, 1, 0)
+        if debug_mode: show_image(working_image, "after sobel")
+        _, working_image = cv2.threshold(working_image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        if debug_mode: show_image(working_image, "after threshold")
         se = cv2.getStructuringElement(cv2.MORPH_RECT, self.se_shape)
-        morphed_image = cv2.morphologyEx(threshholded_image, cv2.MORPH_CLOSE, se)
-        save_debug_image_with_description(morphed_image, "07 - after morphologyEx")
+        working_image = cv2.morphologyEx(working_image, cv2.MORPH_CLOSE, se)
+        if debug_mode: show_image(working_image, "after morphologyEx")
 
-        _, contours, _ = cv2.findContours(morphed_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-        cv2.drawContours(morphed_image, contours, -1, (0, 0, 0), 1)
-        save_debug_image_with_description(morphed_image, "07b - after morphologyEx")
-        _, contours, _ = cv2.findContours(morphed_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        _, contours, _ = cv2.findContours(working_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        cv2.drawContours(working_image, contours, -1, (0, 0, 0), 1)
+        if debug_mode: show_image(working_image, "after morphologyEx 2nd")
+        _, contours, _ = cv2.findContours(working_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
-        tmp_img_for_contours = np.copy(input_image_copy)
+        tmp_img_for_contours = np.copy(self.input_image)
         cv2.drawContours(tmp_img_for_contours, contours, -1, (255, 0, 255), 2)
-        save_debug_image_with_description(tmp_img_for_contours, "08 - all contours")
+        if debug_mode: show_image(tmp_img_for_contours, "all contours")
 
-        tmp_img_for_valid_contours = np.copy(input_image_copy)
+        tmp_img_for_valid_contours = np.copy(self.input_image)
         valid_contour_counter = 0
         for contour in contours:
 
-            highlighting_current_contour_image = np.copy(input_image_copy)
+            highlighting_current_contour_image = np.copy(self.input_image)
             cv2.drawContours(highlighting_current_contour_image, contour, -1, (255, 0, 255), 2)
-            save_debug_image_with_description(highlighting_current_contour_image, "currently processed contour")
+            if debug_mode: show_image(highlighting_current_contour_image, "currently processed contour")
 
             if self.is_valid_contour(contour):
 
@@ -105,7 +99,6 @@ class LicensePlateDetection:
                 box = np.int0(box)  # cast float to long
 
                 cv2.drawContours(tmp_img_for_valid_contours, [box], 0, (255, 0, 0), 1)
-                save_debug_image_with_description(tmp_img_for_valid_contours, "08 - valid contours")
 
                 angle = rect[2]
                 if angle < -45:
@@ -115,6 +108,7 @@ class LicensePlateDetection:
                 extend = cv2.contourArea(contour) / (rect[1][0] * rect[1][1])
                 if extend > 0.5:
                     result_plates.append([box, rect[0][0], rect[0][1], angle])
+        if debug_mode: show_image(tmp_img_for_valid_contours, "valid contours")
         return result_plates
 
     def find_best_plate(self, plates):
@@ -136,6 +130,6 @@ class LicensePlateDetection:
         self.plate_max_height = expected_plate_size[1] * 2
         self.se_shape = (math.ceil(self.original_img_width / 30), math.ceil(self.original_img_width / 180))
 
-    def detect_license_plates(self):
-        potential_plates = self.process_image()
+    def detect_license_plates(self, debug_mode=False):
+        potential_plates = self.process_image(debug_mode)
         return self.find_best_plate(potential_plates)

@@ -1,24 +1,12 @@
 import time
 
+import cv2
+import numpy as np
 from moviepy.video.io.VideoFileClip import VideoFileClip
 
-from CarDetection import *
-from LicensePlateDetection import *
-
-
-def save_debug_image_with_description(image, filename, folder=None):
-    if folder:
-        path = "../debugImages/" + folder + "/" + filename + ".png"
-    else:
-        path = "../debugImages/" + filename + ".png"
-    cv2.imwrite(path, image)
-
-
-def get_image_patch(image, box):
-    size = (box[1][0] - box[0][0], box[3][1] - box[0][1])
-    center = (box[0][0] + size[0] / 2, box[0][1] + size[1] / 2)
-    return cv2.getRectSubPix(image, size, center)
-
+from CarDetection import detect_vehicle
+from LicensePlateDetection import LicensePlateDetection
+from Utils import get_image_patch, save_debug_image
 
 if __name__ == "__main__":
     start = time.time()
@@ -38,11 +26,11 @@ if __name__ == "__main__":
             frame_copy = cv2.rectangle(frame_copy, car_box[0], car_box[3], (0, 0, 255), 3)
             car_image = get_image_patch(frame, car_box)
             print("Detecting LP")
-            save_debug_image_with_description(car_image, "frame_" + str(frame_counter) + "car_" + str(car_counter), "cars")
+            save_debug_image(car_image, "frame_" + str(frame_counter) + "car_" + str(car_counter), "cars")
             license_plate_detection = LicensePlateDetection(car_image)
             plates = license_plate_detection.detect_license_plates()
             cv2.drawContours(frame_copy, plates, -1, (127, 0, 255), 2, offset=car_box[0])
-        save_debug_image_with_description(frame_copy, "frame_" + str(frame_counter), "processed_frames")
+        save_debug_image(frame_copy, "frame_" + str(frame_counter), "processed_frames")
     clip.close()
 
     print("It took " + str(time.time() - start) + " seconds")
