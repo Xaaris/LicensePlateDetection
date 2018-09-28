@@ -113,9 +113,9 @@ class LicensePlateDetection:
 
     def find_best_plate(self, plates):
         if len(plates) < 1:
-            return []
+            return None
         sorted_plates = sorted(plates, key=lambda plate: abs(self.original_img_height * 0.66 - plate[2]))
-        return [sorted_plates[0][0]]
+        return sorted_plates[0][0]
 
     def __init__(self, image):
         self.original_img_height = image.shape[0]
@@ -130,6 +130,6 @@ class LicensePlateDetection:
         self.plate_max_height = expected_plate_size[1] * 2
         self.se_shape = (math.ceil(self.original_img_width / 30), math.ceil(self.original_img_width / 180))
 
-    def detect_license_plates(self, debug_mode=False):
+    def detect_license_plate(self, debug_mode=False):
         potential_plates = self.process_image(debug_mode)
         return self.find_best_plate(potential_plates)

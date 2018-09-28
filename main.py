@@ -1,3 +1,4 @@
+import os
 import time
 
 import cv2
@@ -10,9 +11,9 @@ from Utils import get_image_patch, save_debug_image
 
 if __name__ == "__main__":
     start = time.time()
-    input_file = "/Users/hannes/PycharmProjects/LicensePlateDetection/testFiles/IMG_2993.m4v"
+    fullpath = os.path.abspath("testFiles/IMG_2993.m4v")
 
-    clip = VideoFileClip(input_file, audio=False).subclip(0, 3)
+    clip = VideoFileClip(fullpath, audio=False).subclip(0, 3)
     frame_counter = 0
     for frame in clip.iter_frames():
         frame_counter += 1
@@ -28,8 +29,8 @@ if __name__ == "__main__":
             print("Detecting LP")
             save_debug_image(car_image, "frame_" + str(frame_counter) + "car_" + str(car_counter), "cars")
             license_plate_detection = LicensePlateDetection(car_image)
-            plates = license_plate_detection.detect_license_plates()
-            cv2.drawContours(frame_copy, plates, -1, (127, 0, 255), 2, offset=car_box[0])
+            plate = license_plate_detection.detect_license_plate()
+            if plate is not None: cv2.drawContours(frame_copy, [plate], -1, (127, 0, 255), 2, offset=car_box[0])
         save_debug_image(frame_copy, "frame_" + str(frame_counter), "processed_frames")
     clip.close()
 

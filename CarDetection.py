@@ -6,7 +6,7 @@ import tensorflow as tf
 
 
 class CarDetection:
-    weights_file = '../weights/YOLO_small.ckpt'
+    weights_file = 'weights/YOLO_small.ckpt'
     alpha = 0.1
     confidence_threshold = 0.3
     iou_threshold = 0.5
