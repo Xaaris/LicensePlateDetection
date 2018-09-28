@@ -1,3 +1,5 @@
+import math
+
 import cv2
 import numpy as np
 import tensorflow as tf
@@ -137,7 +139,7 @@ def interpret_output(yolo, output, h_img, w_img):
     classes_num_filtered = np.argmax(filter_mat_probs, axis=3)[
         filter_mat_boxes[0], filter_mat_boxes[1], filter_mat_boxes[2]]
 
-    # order by decreasing probability
+    # order everything by decreasing probability
     argsort = np.array(np.argsort(probs_filtered))[::-1]
     boxes_filtered = boxes_filtered[argsort]
     probs_filtered = probs_filtered[argsort]
@@ -170,10 +172,15 @@ def intersection_over_union(box1, box2):
     leftmost_right_edge = min(box1[0] + 0.5 * box1[2], box2[0] + 0.5 * box2[2])
     bottommost_top_edge = min(box1[1] + 0.5 * box1[3], box2[1] + 0.5 * box2[3])
 
-    intersection_area = max(0, leftmost_right_edge - rightmost_left_edge + 1) * max(0, bottommost_top_edge - topmost_bottom_edge + 1)
+    intersection_area = max(0, leftmost_right_edge - rightmost_left_edge) * max(0,
+                                                                                bottommost_top_edge - topmost_bottom_edge)
 
     box1_area = box1[2] * box1[3]
     box2_area = box2[2] * box2[3]
+
+    # special case: one box contains the other
+    if math.ceil(intersection_area) == math.ceil(box1_area) or math.ceil(intersection_area) == math.ceil(box2_area):
+        return 1
 
     iou = intersection_area / float(box1_area + box2_area - intersection_area)
     return iou
@@ -191,7 +198,8 @@ def extract_results(yolo_results):
             upper_right = (x + w // 2, y - h // 2)
             bottom_left = (x - w // 2, y + h // 2)
             bottom_right = (x + w // 2, y + h // 2)
-            result_contours.append([upper_left, upper_right, bottom_left, bottom_right])
+            if w > 150 and h > 150:  # filter out unusable small boxes
+                result_contours.append([upper_left, upper_right, bottom_left, bottom_right])
     return result_contours
 
 
