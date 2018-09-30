@@ -41,12 +41,16 @@ def show_result(expected_points, input_file, plate, iou):
 def get_test_data():
     data = []
     TestData = namedtuple('TestData', ['image_path', 'expected_plate_pos'])
-    data.append(TestData("tests/testImages/standard1.png", [[160, 204], [159, 188], [237, 182], [238, 196]]))
     data.append(TestData("tests/testImages/angle1.png", [[208, 160], [208, 146], [275, 142], [275, 155]]))
-    data.append(TestData("tests/testImages/bottom_edge1.png", [[240, 172], [241, 188], [313, 170], [313, 185]]))
+    data.append(TestData("tests/testImages/angle2.png", [[223, 157], [222, 171], [292, 167], [291, 153]]))
+    data.append(TestData("tests/testImages/standard1.png", [[160, 204], [159, 188], [237, 182], [238, 196]]))
     data.append(TestData("tests/testImages/standard2.png", [[341, 183], [341, 198], [416, 180], [416, 195]]))
+    data.append(TestData("tests/testImages/standard3.png", [[169, 201], [169, 218], [250, 209], [249, 193]]))
+    data.append(TestData("tests/testImages/standard4.png", [[194, 214], [196, 232], [280, 222], [278, 206]]))
+    data.append(TestData("tests/testImages/bottom_edge1.png", [[240, 172], [241, 188], [313, 185], [313, 170]]))
     data.append(TestData("tests/testImages/small1.png", [[124, 121], [124, 131], [172, 128], [171, 118]]))
     data.append(TestData("tests/testImages/big1.png", [[472, 341], [474, 371], [619, 355], [618, 326]]))
+    data.append(TestData("tests/testImages/lot_of_environment.png", [[432, 290], [433, 313], [549, 301], [548, 277]]))
     return data
 
 
