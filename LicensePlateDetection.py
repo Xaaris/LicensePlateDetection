@@ -47,7 +47,7 @@ class LicensePlateDetection:
 
         _, contours, _ = cv2.findContours(working_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
         cv2.drawContours(working_image, contours, -1, (0, 0, 0), 1)
-        if debug_mode: show_image(working_image, "after morphologyEx 2nd")
+        if debug_mode: show_image(working_image, "after filling in contours")
         _, contours, _ = cv2.findContours(working_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
         tmp_img_for_contours = np.copy(self.input_image)
@@ -60,7 +60,6 @@ class LicensePlateDetection:
 
             highlighting_current_contour_image = np.copy(self.input_image)
             cv2.drawContours(highlighting_current_contour_image, contour, -1, (255, 0, 255), 2)
-            if debug_mode: show_image(highlighting_current_contour_image, "currently processed contour")
 
             if self.is_valid_contour(contour):
 

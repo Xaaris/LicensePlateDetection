@@ -9,8 +9,8 @@ from LicensePlateDetection import LicensePlateDetection
 
 
 def load_image(path):
-    fullpath = os.path.abspath(path)
-    input_file = cv2.imread(fullpath)
+    full_path = os.path.abspath(path)
+    input_file = cv2.imread(full_path)
     return input_file
 
 
@@ -71,5 +71,41 @@ def test_images():
     print("Average IOU was: " + str(total_iou / len(get_test_data())))
 
 
+def grid_search():
+    extend = np.linspace(0.3, 0.5, 5)
+    aspect_ratio_min = np.linspace(1.5, 3.5, 5)
+    aspect_ratio_max = np.linspace(5, 12, 5)
+    se_x_factor = np.linspace(28, 35, 10)
+    se_y_factor = np.linspace(225, 260, 10)
+    file = open("grid_search_results.csv", "w")
+    file.write("IOU; extend; aspect_min; aspect_max; se_x; se_y \n")
+    for e in extend:
+        for aspect_min in aspect_ratio_min:
+            for aspect_max in aspect_ratio_max:
+                for se_x in se_x_factor:
+                    for se_y in se_y_factor:
+                        total_iou = 0
+                        for test_data in get_test_data():
+                            input_file = load_image(test_data.image_path)
+
+                            lpd = LicensePlateDetection(input_file, (aspect_min, aspect_max), se_x, se_y, e)
+                            potential_plates = lpd.detect_license_plate()
+                            if potential_plates is not None:
+                                plate = [[p[0], p[1]] for p in potential_plates]
+                                plate_poly = Polygon(plate)
+                                expected_poly = Polygon(test_data.expected_plate_pos)
+                                iou = calculate_iou(expected_poly, plate_poly)
+                                total_iou += iou
+                        avg_iou = total_iou / len(get_test_data())
+                        file.write("{:5.5f}".format(avg_iou) + "; " +
+                                   "{:5.3f}".format(e) + "; " +
+                                   "{:5.3f}".format(aspect_min) + "; " +
+                                   "{:5.3f}".format(aspect_max) + "; " +
+                                   "{:5.3f}".format(se_x) + "; " +
+                                   "{:5.3f}".format(se_y) + "\n")
+    file.close()
+
+
 if __name__ == '__main__':
     test_images()
+    # grid_search()
