@@ -1,4 +1,5 @@
 import os
+import time
 from collections import namedtuple
 
 import cv2
@@ -111,5 +112,9 @@ def grid_search():
 
 
 if __name__ == '__main__':
+    start = time.time()
+
     test_images()
     # grid_search()
+
+    print("It took " + str(time.time() - start) + " seconds")

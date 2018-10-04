@@ -8,7 +8,7 @@ from Utils import show_image
 
 class LicensePlateDetection:
 
-    def __init__(self, image, aspect_ratio_range=(2.2, 8), se_x=30, se_y=240, min_extend=0.4):
+    def __init__(self, image, aspect_ratio_range=(2.2, 8), se_x=30, se_y=240, min_extend=0.4, max_angle=20):
         self.original_img_height = image.shape[0]
         self.original_img_width = image.shape[1]
 
@@ -21,6 +21,7 @@ class LicensePlateDetection:
         self.plate_max_height = expected_plate_size[1] * 2
         self.se_shape = (math.ceil(self.original_img_width / se_x), math.ceil(self.original_img_width / se_y))
         self.min_plate_extend = min_extend
+        self.plate_max_angle = max_angle
 
     def detect_license_plate(self, debug_mode=False):
         potential_plates = self.process_image(debug_mode)
@@ -114,7 +115,7 @@ class LicensePlateDetection:
                     contour_angle = abs(float(point[1] - opposite_point[1])) / abs(point[0] - opposite_point[0])
                     contour_angle = rad_to_deg(math.atan(contour_angle))
 
-                    if contour_angle <= 20:
+                    if contour_angle <= self.plate_max_angle:
                         return True
         return False
 
