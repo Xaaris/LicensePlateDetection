@@ -14,7 +14,7 @@ def get_image_patch(image, box):
 
 def save_debug_image(image, filename, folder=None):
     if folder:
-        path = "../debugImages/" + folder + "/" + filename + ".png"
+        path = "debugImages/" + folder + "/" + filename + ".png"
     else:
-        path = "../debugImages/" + filename + ".png"
+        path = "debugImages/" + filename + ".png"
     cv2.imwrite(path, image)
