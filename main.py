@@ -12,9 +12,9 @@ from Utils import get_image_patch, save_debug_image
 if __name__ == "__main__":
     start = time.time()
     fullpath = os.path.abspath("testFiles/IMG_2993.m4v")
-
     clip = VideoFileClip(fullpath, audio=False).subclip(0, 3)
     frame_counter = 0
+
     for frame in clip.iter_frames():
         frame_counter += 1
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -34,4 +34,6 @@ if __name__ == "__main__":
         save_debug_image(frame_copy, "frame_" + str(frame_counter), "processed_frames")
     clip.close()
 
-    print("It took " + str(time.time() - start) + " seconds")
+    duration = time.time() - start
+    fps = frame_counter / duration
+    print("Duration: " + str(duration) + "s, FPS: " + str(fps))
