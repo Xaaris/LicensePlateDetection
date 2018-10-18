@@ -136,8 +136,7 @@ def interpret_output(yolo, output, h_img, w_img):
     filter_mat_boxes = np.nonzero(filter_mat_probs)
     boxes_filtered = boxes[filter_mat_boxes[0], filter_mat_boxes[1], filter_mat_boxes[2]]
     probs_filtered = probs[filter_mat_probs]
-    classes_num_filtered = np.argmax(filter_mat_probs, axis=3)[
-        filter_mat_boxes[0], filter_mat_boxes[1], filter_mat_boxes[2]]
+    classes_num_filtered = np.argmax(filter_mat_probs, axis=3)[filter_mat_boxes[0], filter_mat_boxes[1], filter_mat_boxes[2]]
 
     # order everything by decreasing probability
     argsort = np.array(np.argsort(probs_filtered))[::-1]
