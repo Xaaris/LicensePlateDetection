@@ -1,0 +1,8 @@
+Docker:
+
+docker build -t johannes_berger_tf_gpu_image .
+docker run \
+    --runtime=nvidia \
+    -v /home/deeplearning/berger_johannes/LicensePlateDetection/weights:/app/weights \
+    -v /home/deeplearning/berger_johannes/LicensePlateDetection/testFiles:/app/testFiles \
+    johannes_berger_tf_gpu_image
