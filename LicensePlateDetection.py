@@ -8,7 +8,7 @@ from Utils import show_image
 
 class LicensePlateDetection:
 
-    def __init__(self, image, aspect_ratio_range=(2.2, 8), se_x=30, se_y=240, min_extend=0.4, max_angle=20):
+    def __init__(self, image, aspect_ratio_range=(2.2, 8), morph_closing_shape=(30, 240), morph_opening_shape=(2, 2), min_extend=0.4, max_angle=20):
         self.original_img_height = image.shape[0]
         self.original_img_width = image.shape[1]
 
@@ -19,7 +19,8 @@ class LicensePlateDetection:
         self.plate_max_width = expected_plate_size[0] * 2
         self.plate_min_height = expected_plate_size[1] / 2
         self.plate_max_height = expected_plate_size[1] * 2
-        self.se_shape = (math.ceil(self.original_img_width / se_x), math.ceil(self.original_img_width / se_y))
+        self.morph_closing_shape = (math.ceil(self.original_img_width / morph_closing_shape[0]), math.ceil(self.original_img_width / morph_closing_shape[1]))
+        self.morph_opening_shape = morph_opening_shape
         self.min_plate_extend = min_extend
         self.plate_max_angle = max_angle
 
@@ -34,23 +35,22 @@ class LicensePlateDetection:
         if debug_mode: show_image(working_image, "input_image")
         working_image = cv2.cvtColor(working_image, cv2.COLOR_BGR2GRAY)
         if debug_mode: show_image(working_image, "after cvtColor")
-        # working_image = enhance(working_image)
-        # if debug_mode: show_image(working_image, "after enhance")
-        # working_image = cv2.GaussianBlur(working_image, (5, 5), 0)
-        # if debug_mode: show_image(working_image, "after after gaussian blur")
+
         working_image = cv2.Sobel(working_image, -1, 1, 0)
         if debug_mode: show_image(working_image, "after sobel")
+
         _, working_image = cv2.threshold(working_image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         if debug_mode: show_image(working_image, "after threshold")
-        se = cv2.getStructuringElement(cv2.MORPH_RECT, self.se_shape)
-        working_image = cv2.morphologyEx(working_image, cv2.MORPH_CLOSE, se)
-        if debug_mode: show_image(working_image, "after morphologyEx")
+
+        closing_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, self.morph_closing_shape)
+        working_image = cv2.morphologyEx(working_image, cv2.MORPH_CLOSE, closing_kernel)
+        if debug_mode: show_image(working_image, "after morph closing")
+
+        opening_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, self.morph_opening_shape)
+        working_image = cv2.morphologyEx(working_image, cv2.MORPH_OPEN, opening_kernel)
+        if debug_mode: show_image(working_image, "after morph opening")
 
         _, contours, _ = cv2.findContours(working_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-        cv2.drawContours(working_image, contours, -1, (0, 0, 0), 1)
-        if debug_mode: show_image(working_image, "after filling in contours")
-        _, contours, _ = cv2.findContours(working_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-
         tmp_img_for_contours = np.copy(self.input_image)
         cv2.drawContours(tmp_img_for_contours, contours, -1, (255, 0, 255), 2)
         if debug_mode: show_image(tmp_img_for_contours, "all contours")
@@ -122,11 +122,6 @@ class LicensePlateDetection:
 
 def rad_to_deg(angle):
     return angle * 180 / np.pi
-
-
-def enhance(img):
-    kernel = np.array([[-1, 0, 1], [-2, 0, 2], [1, 0, 1]])
-    return cv2.filter2D(img, -1, kernel)
 
 
 def rotate_and_resize(image, rotation_matrix, old_size, new_size):

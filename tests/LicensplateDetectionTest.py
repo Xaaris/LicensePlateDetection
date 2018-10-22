@@ -1,3 +1,4 @@
+import math
 import os
 import time
 from collections import namedtuple
@@ -80,41 +81,59 @@ def grid_search():
     extend = np.linspace(0.3, 0.5, 5)
     aspect_ratio_min = np.linspace(1.5, 3.5, 5)
     aspect_ratio_max = np.linspace(5, 12, 5)
-    se_x_factor = np.linspace(28, 35, 10)
-    se_y_factor = np.linspace(225, 260, 10)
+    se_x_factor = np.linspace(28, 35, 5)
+    se_y_factor = np.linspace(225, 260, 5)
+    morph_opening_size = (2, 3)
+    max_angle = np.linspace(10, 35, 5)
+
+    number_of_iterations = extend.size * aspect_ratio_min.size * aspect_ratio_max.size * se_x_factor.size * se_y_factor.size * len(morph_opening_size) * max_angle.size
+    one_percent_ops = math.ceil(number_of_iterations / 100)
+    ops_counter = 0
+    percentage_done = 0
+
     file = open("tests/grid_search_results.csv", "w")
-    file.write("IOU; extend; aspect_min; aspect_max; se_x; se_y \n")
-    for e in extend:
+    file.write("IOU; extend; aspect_min; aspect_max; se_x; se_y; opening_size; max_angle \n")
+    for ext in extend:
         for aspect_min in aspect_ratio_min:
             for aspect_max in aspect_ratio_max:
                 for se_x in se_x_factor:
                     for se_y in se_y_factor:
-                        total_iou = 0
-                        for test_data in get_test_data():
-                            input_file = load_image(test_data.image_path)
+                        for opening_size in morph_opening_size:
+                            for angle in max_angle:
+                                total_iou = 0
 
-                            lpd = LicensePlateDetection(input_file, (aspect_min, aspect_max), se_x, se_y, e)
-                            potential_plates = lpd.detect_license_plate()
-                            if potential_plates is not None:
-                                plate = [[p[0], p[1]] for p in potential_plates]
-                                plate_poly = Polygon(plate)
-                                expected_poly = Polygon(test_data.expected_plate_pos)
-                                iou = calculate_iou(expected_poly, plate_poly)
-                                total_iou += iou
-                        avg_iou = total_iou / len(get_test_data())
-                        file.write("{:5.5f}".format(avg_iou) + "; " +
-                                   "{:5.3f}".format(e) + "; " +
-                                   "{:5.3f}".format(aspect_min) + "; " +
-                                   "{:5.3f}".format(aspect_max) + "; " +
-                                   "{:5.3f}".format(se_x) + "; " +
-                                   "{:5.3f}".format(se_y) + "\n")
+                                ops_counter += 1
+                                if ops_counter % one_percent_ops == 0:
+                                    percentage_done += 1
+                                    print("Completed " + str(percentage_done) + "%")
+
+                                for test_data in get_test_data():
+                                    input_file = load_image(test_data.image_path)
+
+                                    lpd = LicensePlateDetection(input_file, (aspect_min, aspect_max), (se_x, se_y), (opening_size, opening_size), ext, angle)
+                                    potential_plates = lpd.detect_license_plate()
+                                    if potential_plates is not None:
+                                        plate = [[p[0], p[1]] for p in potential_plates]
+                                        plate_poly = Polygon(plate)
+                                        expected_poly = Polygon(test_data.expected_plate_pos)
+                                        iou = calculate_iou(expected_poly, plate_poly)
+                                        total_iou += iou
+                                avg_iou = total_iou / len(get_test_data())
+                                file.write("{:5.5f}".format(avg_iou) + "; " +
+                                           "{:5.3f}".format(ext) + "; " +
+                                           "{:5.3f}".format(aspect_min) + "; " +
+                                           "{:5.3f}".format(aspect_max) + "; " +
+                                           "{:5.3f}".format(se_x) + "; " +
+                                           "{:5.3f}".format(se_y) + "; " +
+                                           "{:5.3f}".format(opening_size) + "; " +
+                                           "{:5.3f}".format(angle) + "\n")
     file.close()
 
 
 if __name__ == '__main__':
     start = time.time()
 
-    test_images()
-    # grid_search()
+    # test_images()
+    grid_search()
 
     print("It took " + str(time.time() - start) + " seconds")

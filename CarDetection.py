@@ -18,7 +18,8 @@ class CarDetection:
 
     def __init__(self):
         print("Building YOLO_small graph...")
-        with tf.device('/device:GPU:1'):
+        # with tf.device('/device:GPU:1'):
+        with tf.device('/device:CPU:0'):
             self.x = tf.placeholder('float32', [None, 448, 448, 3])
             self.conv_1 = self.conv_layer(1, self.x, 64, 7, 2)
             self.pool_2 = self.pooling_layer(2, self.conv_1, 2, 2)
@@ -172,8 +173,7 @@ def intersection_over_union(box1, box2):
     leftmost_right_edge = min(box1[0] + 0.5 * box1[2], box2[0] + 0.5 * box2[2])
     bottommost_top_edge = min(box1[1] + 0.5 * box1[3], box2[1] + 0.5 * box2[3])
 
-    intersection_area = max(0, leftmost_right_edge - rightmost_left_edge) * max(0,
-                                                                                bottommost_top_edge - topmost_bottom_edge)
+    intersection_area = max(0, leftmost_right_edge - rightmost_left_edge) * max(0, bottommost_top_edge - topmost_bottom_edge)
 
     box1_area = box1[2] * box1[3]
     box2_area = box2[2] * box2[3]
