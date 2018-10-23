@@ -80,11 +80,11 @@ def test_images():
 def grid_search():
     extend = np.linspace(0.3, 0.5, 5)
     aspect_ratio_min = np.linspace(1.5, 3.5, 5)
-    aspect_ratio_max = np.linspace(5, 12, 5)
-    se_x_factor = np.linspace(28, 35, 5)
-    se_y_factor = np.linspace(225, 260, 5)
-    morph_opening_size = (2, 3)
-    max_angle = np.linspace(10, 35, 5)
+    aspect_ratio_max = np.linspace(6.5, 12, 5)
+    se_x_factor = np.linspace(30, 40, 5)
+    se_y_factor = np.linspace(210, 240, 5)
+    morph_opening_size = (3,)
+    max_angle = np.linspace(15, 30, 4)
 
     number_of_iterations = extend.size * aspect_ratio_min.size * aspect_ratio_max.size * se_x_factor.size * se_y_factor.size * len(morph_opening_size) * max_angle.size
     one_percent_ops = math.ceil(number_of_iterations / 100)
@@ -133,7 +133,7 @@ def grid_search():
 if __name__ == '__main__':
     start = time.time()
 
-    # test_images()
-    grid_search()
+    test_images()
+    # grid_search()
 
     print("It took " + str(time.time() - start) + " seconds")

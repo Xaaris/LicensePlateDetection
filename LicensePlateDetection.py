@@ -8,7 +8,7 @@ from Utils import show_image
 
 class LicensePlateDetection:
 
-    def __init__(self, image, aspect_ratio_range=(2.2, 8), morph_closing_shape=(30, 240), morph_opening_shape=(2, 2), min_extend=0.4, max_angle=20):
+    def __init__(self, image, aspect_ratio_range=(2.2, 8), morph_closing_shape=(35, 225), morph_opening_shape=(3, 3), min_extend=0.4, max_angle=20):
         self.original_img_height = image.shape[0]
         self.original_img_width = image.shape[1]
 
