@@ -8,7 +8,7 @@ from Utils import show_image
 
 class LicensePlateDetection:
 
-    def __init__(self, image, aspect_ratio_range=(2.2, 8), morph_closing_shape=(35, 225), morph_opening_shape=(3, 3), min_extend=0.4, max_angle=20):
+    def __init__(self, image, aspect_ratio_range=(1.5, 8.5), morph_closing_shape=(35, 225), morph_opening_shape=(3, 3), min_extend=0.4, max_angle=10):
         self.original_img_height = image.shape[0]
         self.original_img_width = image.shape[1]
 
@@ -56,11 +56,7 @@ class LicensePlateDetection:
         if debug_mode: show_image(tmp_img_for_contours, "all contours")
 
         tmp_img_for_valid_contours = np.copy(self.input_image)
-        valid_contour_counter = 0
         for contour in contours:
-
-            highlighting_current_contour_image = np.copy(self.input_image)
-            cv2.drawContours(highlighting_current_contour_image, contour, -1, (255, 0, 255), 2)
 
             if self.is_valid_contour(contour):
 
@@ -71,13 +67,13 @@ class LicensePlateDetection:
                 angle = rect[2]
                 if angle < -45:
                     angle += 90
+                pos_x = rect[0][0]
+                pos_y = rect[0][1]
 
-                valid_contour_counter += 1
+                result_plates.append([box, pos_x, pos_y, angle])
+
                 cv2.drawContours(tmp_img_for_valid_contours, [box], -1, (255, 0, 0), 1)
-                extend = cv2.contourArea(contour) / (rect[1][0] * rect[1][1])
-                if extend > self.min_plate_extend:
-                    result_plates.append([box, rect[0][0], rect[0][1], angle])
-                    cv2.drawContours(tmp_img_for_valid_contours, contour, -1, (255, 0, 255), 2)
+                cv2.drawContours(tmp_img_for_valid_contours, contour, -1, (255, 0, 255), 2)
 
         if debug_mode: show_image(tmp_img_for_valid_contours, "valid contours")
         return result_plates
@@ -102,21 +98,24 @@ class LicensePlateDetection:
             aspect_ratio = float(width) / height
             if self.plate_aspect_ratio_range[0] < aspect_ratio < self.plate_aspect_ratio_range[1]:
 
-                box = cv2.boxPoints(rect)
-                box = np.int0(box)
-                box_copy = list(box)
-                point = box_copy[0]
-                del (box_copy[0])
-                distances_to_first_point = [((p[0] - point[0]) ** 2 + (p[1] - point[1]) ** 2) for p in box_copy]
-                sorted_dists = sorted(distances_to_first_point)
-                opposite_point = box_copy[distances_to_first_point.index(sorted_dists[1])]
+                extend = cv2.contourArea(contour) / (rect[1][0] * rect[1][1])
+                if extend > self.min_plate_extend:
 
-                if abs(point[0] - opposite_point[0]) > 0:
-                    contour_angle = abs(float(point[1] - opposite_point[1])) / abs(point[0] - opposite_point[0])
-                    contour_angle = rad_to_deg(math.atan(contour_angle))
+                    box = cv2.boxPoints(rect)
+                    box = np.int0(box)
+                    box_copy = list(box)
+                    point = box_copy[0]
+                    del (box_copy[0])
+                    distances_to_first_point = [((p[0] - point[0]) ** 2 + (p[1] - point[1]) ** 2) for p in box_copy]
+                    sorted_dists = sorted(distances_to_first_point)
+                    opposite_point = box_copy[distances_to_first_point.index(sorted_dists[1])]
 
-                    if contour_angle <= self.plate_max_angle:
-                        return True
+                    if abs(point[0] - opposite_point[0]) > 0:
+                        contour_angle = abs(float(point[1] - opposite_point[1])) / abs(point[0] - opposite_point[0])
+                        contour_angle = rad_to_deg(math.atan(contour_angle))
+
+                        if contour_angle <= self.plate_max_angle:
+                            return True
         return False
 
 

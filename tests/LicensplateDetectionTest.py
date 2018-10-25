@@ -83,8 +83,10 @@ def grid_search():
     aspect_ratio_max = np.linspace(6.5, 12, 5)
     se_x_factor = np.linspace(30, 40, 5)
     se_y_factor = np.linspace(210, 240, 5)
-    morph_opening_size = (3,)
-    max_angle = np.linspace(15, 30, 4)
+    morph_opening_size = (2, 3)
+    max_angle = np.linspace(10, 20, 4)
+
+    number_of_test_samples = len(get_test_data())
 
     number_of_iterations = extend.size * aspect_ratio_min.size * aspect_ratio_max.size * se_x_factor.size * se_y_factor.size * len(morph_opening_size) * max_angle.size
     one_percent_ops = math.ceil(number_of_iterations / 100)
@@ -109,16 +111,17 @@ def grid_search():
 
                                 for test_data in get_test_data():
                                     input_file = load_image(test_data.image_path)
-
                                     lpd = LicensePlateDetection(input_file, (aspect_min, aspect_max), (se_x, se_y), (opening_size, opening_size), ext, angle)
                                     potential_plates = lpd.detect_license_plate()
+
                                     if potential_plates is not None:
                                         plate = [[p[0], p[1]] for p in potential_plates]
                                         plate_poly = Polygon(plate)
                                         expected_poly = Polygon(test_data.expected_plate_pos)
                                         iou = calculate_iou(expected_poly, plate_poly)
                                         total_iou += iou
-                                avg_iou = total_iou / len(get_test_data())
+
+                                avg_iou = total_iou / number_of_test_samples
                                 file.write("{:5.5f}".format(avg_iou) + "; " +
                                            "{:5.3f}".format(ext) + "; " +
                                            "{:5.3f}".format(aspect_min) + "; " +
