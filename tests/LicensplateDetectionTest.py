@@ -1,3 +1,4 @@
+import datetime
 import math
 import os
 import time
@@ -97,18 +98,18 @@ def test_images():
             print(test_data.image_path + " IOU: " + str(iou))
         else:
             print(test_data.image_path + " IOU: Failed to locate plate")
-        show_result(test_data.expected_plate_pos, input_file, plate, test_data.image_path, iou)
+        # show_result(test_data.expected_plate_pos, input_file, plate, test_data.image_path, iou)
     print("\nAverage IOU: " + str(total_iou / len(get_test_data())) + " samples: " + str(len(get_test_data())))
 
 
 def grid_search():
-    extend = np.linspace(0.3, 0.5, 5)
-    aspect_ratio_min = np.linspace(1.5, 3.5, 5)
-    aspect_ratio_max = np.linspace(6.5, 12, 5)
-    se_x_factor = np.linspace(30, 40, 5)
-    se_y_factor = np.linspace(210, 240, 5)
-    morph_opening_size = (2, 3)
-    max_angle = np.linspace(10, 20, 4)
+    extend = np.linspace(0.4, 0.4, 1)
+    aspect_ratio_min = np.linspace(1.8, 1.8, 1)
+    aspect_ratio_max = np.linspace(6.5, 12, 3)
+    se_x_factor = np.linspace(34, 37, 10)
+    se_y_factor = np.linspace(215, 222, 10)
+    morph_opening_size = (3,)
+    max_angle = np.linspace(10, 10, 1)
 
     number_of_test_samples = len(get_test_data())
 
@@ -117,7 +118,8 @@ def grid_search():
     ops_counter = 0
     percentage_done = 0
 
-    file = open("tests/grid_search_results.csv", "w")
+    now = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
+    file = open("tests/grid_search_results_" + now + ".csv", "w")
     file.write("IOU; extend; aspect_min; aspect_max; se_x; se_y; opening_size; max_angle \n")
     for ext in extend:
         for aspect_min in aspect_ratio_min:
