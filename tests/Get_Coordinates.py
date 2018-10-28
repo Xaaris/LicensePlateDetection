@@ -1,33 +1,35 @@
-import cv2
+import glob
+import os
 
-refPt = []
+import cv2
 
 
 def click(event, x, y, flags, param):
-
     if event == cv2.EVENT_LBUTTONDOWN:
         refPt.append([x, y])
 
 
-image = cv2.imread("testImages/difficult_light1.png")
-clone = image.copy()
-cv2.namedWindow("image")
-cv2.setMouseCallback("image", click)
+path = '../debugImages/cars/'
+for filename in glob.glob(os.path.join(path, '*.png')):
 
-while True:
-    if len(refPt) > 1:
-        for i in range(len(refPt) - 1):
-            cv2.line(image, (refPt[i][0], refPt[i][1]), (refPt[i+1][0], refPt[i+1][1]), (0, 255, 0), 1)
-    cv2.imshow("image", image)
-    key = cv2.waitKey(1) & 0xFF
+    refPt = []
+    image = cv2.imread(filename)
+    clone = image.copy()
+    cv2.namedWindow(filename)
+    cv2.setMouseCallback(filename, click)
 
-    if key == ord("r"):
-        image = clone.copy()
-        refPt = []
+    while True:
+        if len(refPt) > 1:
+            for i in range(len(refPt) - 1):
+                cv2.line(image, (refPt[i][0], refPt[i][1]), (refPt[i + 1][0], refPt[i + 1][1]), (0, 255, 0), 1)
+        cv2.imshow(filename, image)
+        key = cv2.waitKey(1) & 0xFF
 
-    elif key == ord("c"):
-        break
+        if key == ord("r"):
+            image = clone.copy()
+            refPt = []
 
-print(refPt)
-
-cv2.destroyAllWindows()
+        elif key == ord("c"):
+            break
+    print("data.append(TestData(\"" + filename + "\", " + str(refPt) + "))")
+    cv2.destroyAllWindows()

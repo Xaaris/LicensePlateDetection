@@ -56,6 +56,30 @@ def get_test_data():
     data.append(TestData("difficult_front1.png", [[94, 364], [277, 371], [279, 409], [96, 401]]))
     data.append(TestData("difficult_light1.png", [[49, 355], [224, 360], [227, 396], [51, 390]]))
     data.append(TestData("lot_of_environment.png", [[432, 290], [433, 313], [549, 301], [548, 277]]))
+    data.append(TestData("frame_56car_2.png", [[149, 119], [196, 116], [196, 126], [149, 129]]))
+    data.append(TestData("frame_57car_2.png", [[173, 131], [221, 129], [221, 138], [173, 142]]))
+    data.append(TestData("frame_21car_3.png", [[122, 122], [171, 118], [172, 128], [122, 132]]))
+    data.append(TestData("frame_14car_1.png", [[311, 401], [478, 381], [480, 417], [312, 439]]))
+    data.append(TestData("frame_15car_1.png", [[480, 423], [662, 401], [665, 442], [482, 464]]))
+    data.append(TestData("frame_69car_1.png", [[340, 183], [415, 179], [415, 195], [342, 198]]))
+    data.append(TestData("frame_68car_1.png", [[240, 173], [311, 170], [311, 185], [241, 188]]))
+    data.append(TestData("frame_74car_1.png", [[403, 204], [492, 200], [494, 220], [402, 224]]))
+    data.append(TestData("frame_75car_1.png", [[437, 216], [531, 212], [532, 232], [437, 237]]))
+    data.append(TestData("frame_7car_2.png", [[315, 191], [400, 185], [399, 204], [313, 208]]))
+    data.append(TestData("frame_6car_2.png", [[300, 186], [378, 180], [378, 196], [298, 200]]))
+    data.append(TestData("frame_40car_1.png", [[232, 225], [329, 215], [330, 235], [230, 246]]))
+    data.append(TestData("frame_41car_1.png", [[254, 240], [357, 230], [359, 250], [253, 262]]))
+    data.append(TestData("frame_6car_1.png", [[230, 212], [326, 201], [327, 220], [230, 230]]))
+    data.append(TestData("frame_7car_1.png", [[240, 221], [343, 209], [345, 230], [241, 241]]))
+    data.append(TestData("frame_37car_1.png", [[199, 196], [283, 188], [285, 206], [199, 214]]))
+    data.append(TestData("frame_36car_1.png", [[184, 178], [264, 170], [266, 187], [184, 195]]))
+    data.append(TestData("frame_1car_2.png", [[208, 147], [274, 142], [274, 154], [209, 159]]))
+    data.append(TestData("frame_73car_1.png", [[386, 196], [471, 194], [472, 212], [384, 215]]))
+    data.append(TestData("frame_72car_1.png", [[399, 181], [482, 179], [480, 195], [399, 199]]))
+    data.append(TestData("frame_47car_1.png", [[520, 368], [679, 351], [678, 383], [520, 401]]))
+    data.append(TestData("frame_46car_1.png", [[472, 341], [616, 325], [618, 355], [472, 371]]))
+    data.append(TestData("frame_1car_1.png", [[159, 189], [236, 181], [237, 196], [160, 205]]))
+    data.append(TestData("frame_13car_1.png", [[481, 353], [638, 336], [640, 370], [483, 389]]))
     return data
 
 
@@ -73,8 +97,8 @@ def test_images():
             print(test_data.image_path + " IOU: " + str(iou))
         else:
             print(test_data.image_path + " IOU: Failed to locate plate")
-        # show_result(test_data.expected_plate_pos, input_file, plate, test_data.image_path, iou)
-    print("Average IOU was: " + str(total_iou / len(get_test_data())))
+        show_result(test_data.expected_plate_pos, input_file, plate, test_data.image_path, iou)
+    print("\nAverage IOU: " + str(total_iou / len(get_test_data())) + " samples: " + str(len(get_test_data())))
 
 
 def grid_search():
