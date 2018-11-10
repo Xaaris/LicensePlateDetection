@@ -1,7 +1,6 @@
 debugImages/
 testFiles/
 .idea/
-weights/YOLO_small.ckpt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
